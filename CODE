@@ -1,0 +1,61 @@
+#include <LiquidCrystal.h>  // Include the LiquidCrystal library to work with LCD
+
+// Initialize the LCD with the pins connected: RS, E, D4, D5, D6, D7
+LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// Define pin numbers and variables
+int pin8 = 8;              // Output pin to control external device (e.g., buzzer or LED)
+int analogpin = A0;        // Analog input pin connected to air quality sensor
+int sensorvalue = 0;       // Variable to store sensor reading
+
+void setup(){
+  pinMode(analogpin, INPUT);   // Set analog pin as input
+  pinMode(pin8, OUTPUT);       // Set pin8 as output
+  lcd.begin(16, 2);            // Initialize LCD with 16 columns and 2 rows
+  lcd.setCursor(0, 0);         // Set cursor to first column of first row
+  lcd.print("What is the air"); // Display static message
+  lcd.setCursor(0, 1);         // Set cursor to first column of second row
+  lcd.print("Quality today");  // Display static message
+  Serial.begin(9600);          // Start serial communication at 9600 baud
+}
+
+void loop(){
+  delay(1000);  // Wait for 1 second between readings
+
+  sensorvalue = analogRead(analogpin);  // Read value from air quality sensor
+  Serial.print("Air Quality in PPM = "); // Print label
+  Serial.println(sensorvalue);          // Print sensor value
+
+  lcd.clear();                          // Clear LCD screen
+  lcd.setCursor(0, 0);                  // Set cursor to top row
+  lcd.print("Air Quality:");            // Display label
+  lcd.print(sensorvalue);              // Display sensor reading
+
+  // Display air quality message and particulate matter type based on sensor value
+  if(sensorvalue <= 100){
+    Serial.print("Fresh Air");          // Log fresh air
+    Serial.print("\r\n");               // New line in serial monitor
+    lcd.setCursor(0, 1);                // Move to second row
+    lcd.print("PM 10");                 // Display PM type
+  }
+  else if(sensorvalue > 100 && sensorvalue <= 200){
+    Serial.print("Poor Air");           // Log poor air
+    Serial.print("\r\n");
+    lcd.setCursor(0, 1);
+    lcd.print("PM 2.5");
+  }
+  else if(sensorvalue > 200){
+    Serial.print("Very Poor Air");      // Log very poor air
+    Serial.print("\r\n");
+    lcd.setCursor(0, 1);
+    lcd.print("PM 1.0");
+  }
+
+  // Turn on output device if air quality is very poor
+  if(sensorvalue > 200){
+    digitalWrite(pin8, HIGH);  // Activate warning (e.g., buzzer or LED)
+  }
+  else{
+    digitalWrite(pin8, LOW);   // Deactivate warning
+  }
+}
